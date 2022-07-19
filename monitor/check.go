@@ -2,7 +2,6 @@ package monitor
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/spf13/viper"
 	"io"
 	"io/ioutil"
@@ -43,9 +42,9 @@ func Hmscan(scanfile string) []string {
 	result.ReadConfig(bytes.NewBuffer(rspBody))
 	if err := result.ReadConfig(bytes.NewBuffer(rspBody)); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Println("找不到配置文件..")
+			Error.Println("URL:" + url + "找不到配置文件..")
 		} else {
-			fmt.Println("配置文件出错..")
+			Error.Println("URL:" + url + "配置文件出错..")
 		}
 	}
 	// 结果url拼接
@@ -64,7 +63,7 @@ resetcheck:
 	resp, err := client.Do(req)
 
 	if err != nil {
-		fmt.Println("Http get err:", err)
+		Error.Println("Http get err:", err)
 	}
 	//if resp.StatusCode != 200 {
 	//	fmt.Println("status code:", err)
@@ -75,30 +74,28 @@ resetcheck:
 		time.Sleep(3 * time.Second)
 		goto resetcheck
 	} else {
-		fmt.Printf("河马webshell扫描完成")
+		Info.Printf("河马webshell扫描完成" + " URL:" + url)
 	}
 	//fmt.Printf(string(body))
 	html := strings.Replace(string(body), "\n", "", -1)
-	re_json := regexp.MustCompile(`"results":\[(.*?)\]`)
+	re_json := regexp.MustCompile(`<script id="__NEXT_DATA__" type="application/json">(.*?)</script>`)
 	result_json := re_json.FindString(html)
-	result_json = result_json[11 : len(result_json)-1]
+	// 获取结果JSON
+	result_json = result_json[51 : len(result_json)-9]
 	result := viper.New()
 	// 设置配置文件类型为json 这里很重要 不是指的话会读取不到 踩坑踩坑
 	result.SetConfigType("json")
 	result.ReadConfig(bytes.NewBuffer([]byte(result_json)))
 	if err := result.ReadConfig(bytes.NewBuffer([]byte(result_json))); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Println("找不到配置文件..")
+			Error.Println("URL:" + url + "找不到配置文件..")
 		} else {
-			fmt.Println("配置文件出错..")
+			Error.Println("URL:" + url + "配置文件出错..")
 		}
 	}
-
 	// 返回字符数组
 	var scanresult []string
-	scanresult = append(scanresult, result.GetString(`filename`))
-	scanresult = append(scanresult, result.GetString(`md5`))
-	scanresult = append(scanresult, result.GetString(`description`))
+	scanresult = strings.Split(result.GetString(`props.pageProps.data.summary`), "/")
 	return scanresult
 }
 
@@ -144,20 +141,18 @@ resetcheck:
 	// 开始请求
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println("Http get err:", err)
+		Error.Println("Http get err:", err)
 	}
 	//if resp.StatusCode != 200 {
 	//	fmt.Println("status code:", err)
 	//}
 	defer resp.Body.Close()
 	body, _ := ioutil.ReadAll(resp.Body)
-	var scanresult []string
-
 	if checkstatus := strings.Contains(string(body), "pending"); checkstatus {
 		time.Sleep(3 * time.Second)
 		goto resetcheck
 	} else {
-		fmt.Printf("百度webdir+扫描完成")
+		Info.Printf("百度webdir+扫描完成" + " URL:" + url)
 	}
 	result := viper.New()
 	result.SetConfigType("json")
@@ -167,39 +162,17 @@ resetcheck:
 	result.ReadConfig(bytes.NewBuffer([]byte(html)))
 	if err := result.ReadConfig(bytes.NewBuffer([]byte(html))); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Println("找不到配置文件..")
+			Error.Println("找不到配置文件..")
 		} else {
-			fmt.Println("配置文件出错..")
+			Error.Println("配置文件出错..")
 		}
 	}
-	scanresult[1] = result.GetString(`md5`)
-	//fmt.Printf(result.GetString(`data.descr`))
-	//fmt.Printf(result.GetString(`md5`))
-	re_json := strings.Split(html, "],")
-	re_json1 := re_json[0]
-	results := re_json1[9:len(re_json1)]
-	// path descr
-	result.ReadConfig(bytes.NewBuffer([]byte(results)))
-	if err := result.ReadConfig(bytes.NewBuffer([]byte(results))); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			fmt.Println("找不到配置文件..")
-		} else {
-			fmt.Println("配置文件出错..")
-		}
-	}
-	scanresult[0] = result.GetString(`path`)
-	scanresult[2] = result.GetString(`descr`)
+	// 返回字符
+	var scanresult []string
+	scanresult = append(scanresult, result.GetString(`detected`))
+	scanresult = append(scanresult, "0")
+	scanresult = append(scanresult, result.GetString(`scanned`))
 	return scanresult
-}
-
-// Aliscan 阿里伏魔
-func Aliscan() {
-	// 菜狗不会js逆向啊!!!
-	// 写不来 有师傅会写的可以来填坑
-	// 阿里伏魔平台 https://ti.aliyun.com/#/webshell
-	// 师傅们有其他的webshell在线检测网站可以多多推荐
-	// 有想法一起完善这个工具的师傅联系我
-	// Mail: root@tx1ee.cc
 }
 
 // Sechm 安全检测
@@ -207,15 +180,11 @@ var Sechm []string
 var Secbd []string
 var Secresult []string
 
-func Seccheck(samplespath string) []string {
-	if Gpushconf[5] == "true" {
+func Seccheck(samplespath string) ([]string, []string) {
+	if "true" == "true" {
 		Sechm = Hmscan(samplespath)
 		Secbd = WebDirScan(samplespath)
-		Secresult = append(Secresult, Sechm[4])
-		Secresult = append(Secresult, Secbd[3])
-	} else {
-		return nil
 	}
 	// 返回河马和百度的检查结果
-	return Secresult
+	return Sechm, Secbd
 }
