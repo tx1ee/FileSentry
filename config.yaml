@@ -15,6 +15,6 @@ Bfilesuffix:
 - .exe
 - .php3
 MonitorDirs:
-- c:\
+- e:\test
 ExcludeDirs:
 - c:\tx1ee\test

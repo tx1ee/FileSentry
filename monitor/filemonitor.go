@@ -22,8 +22,6 @@ if Strinarr(a1[1], FileExts) {
 }
 */
 
-// 事件ID
-
 func FileExt(filename string) []string {
 	//获取文件名称带后缀
 	fileNameWithSuffix := path.Base(filename)
@@ -148,6 +146,7 @@ func (this *NotifyFile) WatchEvent(bfilesuffix []string) {
 				if err == nil && fi.IsDir() {
 					// 文件夹更新看着很乱
 					//fmt.Println("文件夹更新 : ", ev.Name)
+					break
 				} else {
 					// 文件是否为空
 					filenotnull, _ := ioutil.ReadFile(ev.Name)
