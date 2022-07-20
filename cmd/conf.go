@@ -5,8 +5,8 @@ Copyright © 2022 tx1eee root@tx1ee.cc
 package cmd
 
 import (
+	"filesentry/monitor"
 	"github.com/spf13/cobra"
-	"golangcode/monitor"
 )
 
 var PushConf string
