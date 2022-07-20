@@ -1,12 +1,10 @@
 ### FileSentry v0.1 https://github.com/tx1ee/FileSentry
 
-![img0](images\img0.png)
+![img11](images\img11.png)
 
 ## 开发背景
 
 工具开发想法最早是去年国hvv，客户那边云上资产linux服务器比较多，d盾可以监控windows上的文件变化但是没有linux版本，github上也有一些用python开发的文件监控工具，但是每次跑到服务器上看觉得有点麻烦，后面想法就是写个多平台带消息推送和安全检测的工具，在去年的7月份用python开发了一个版本用pyinstall编译exe或linux可执行文件，效果如下：
-
-![img.png](images/img4.png)
 
 
 
