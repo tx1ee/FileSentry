@@ -1,9 +1,8 @@
-### FileSentry v0.1 https://github.com/tx1ee/FileSentry
-
-
 <div align="center">
 <img src="images/imga.png">
 </div>
+
+### FileSentry v0.1 https://github.com/tx1ee/FileSentry
 
 ## 开发背景
 
